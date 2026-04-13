@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vs
+bin
+obj
+artifacts
+
+Dockerfile*
+docker-compose*.yml
+
+*.user
+*.suo
