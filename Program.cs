@@ -1,12 +1,18 @@
 using ModelContextProtocol.Protocol;
 using WebApiApp.Mcp;
 
+EnvFileLoader.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton(new ClientAppInfo(
+    builder.Configuration["CLIENT_APP_ID"] ??
+    Environment.GetEnvironmentVariable("CLIENT_APP_ID") ??
+    string.Empty));
 builder.Services
     .AddMcpServer(options =>
     {
@@ -50,7 +56,8 @@ app.MapGet("/", () => Results.Ok(new
         {
             "sum_digits",
             "multiply_digits",
-            "get_utc_datetime"
+            "get_utc_datetime",
+            "get_client_app_id"
         }
     }
 }));
@@ -94,4 +101,39 @@ app.Run();
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+static class EnvFileLoader
+{
+    public static void Load(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return;
+        }
+
+        foreach (var rawLine in File.ReadAllLines(filePath))
+        {
+            var line = rawLine.Trim();
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+            {
+                continue;
+            }
+
+            var separatorIndex = line.IndexOf('=');
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var key = line[..separatorIndex].Trim();
+            var value = line[(separatorIndex + 1)..].Trim().Trim('"');
+
+            if (!string.IsNullOrWhiteSpace(key) &&
+                string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+            {
+                Environment.SetEnvironmentVariable(key, value);
+            }
+        }
+    }
 }
