@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "p222ABqBf7w=",
+  "dgSpecHash": "SVJsi6ulg60=",
   "success": true,
   "projectFilePath": "C:\\Work\\1_projects\\claude skills testing\\WebApiApp\\WebApiApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.4\\microsoft.aspnetcore.openapi.10.0.4.nupkg.sha512",
-    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\microsoft.extensions.ai.abstractions\\10.4.1\\microsoft.extensions.ai.abstractions.10.4.1.nupkg.sha512",
+    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512",
+    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\modelcontextprotocol\\1.2.0\\modelcontextprotocol.1.2.0.nupkg.sha512",
+    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\modelcontextprotocol.aspnetcore\\1.2.0\\modelcontextprotocol.aspnetcore.1.2.0.nupkg.sha512",
+    "C:\\Users\\KonstantinPodgaets\\.nuget\\packages\\modelcontextprotocol.core\\1.2.0\\modelcontextprotocol.core.1.2.0.nupkg.sha512"
   ],
   "logs": []
 }
