@@ -11,10 +11,14 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
 
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly string _filePath;
+    private readonly ILogger<JsonEntraSessionAuthStore> _logger;
 
-    public JsonEntraSessionAuthStore(EntraAuthOptions options)
+    public JsonEntraSessionAuthStore(
+        EntraAuthOptions options,
+        ILogger<JsonEntraSessionAuthStore> logger)
     {
         _filePath = options.AuthStateFilePath;
+        _logger = logger;
 
         var directoryPath = Path.GetDirectoryName(_filePath);
         if (!string.IsNullOrWhiteSpace(directoryPath))
@@ -79,13 +83,24 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
             return new Dictionary<string, PersistedEntraSessionAuthState>(StringComparer.Ordinal);
         }
 
-        await using var stream = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var persisted = await JsonSerializer.DeserializeAsync<Dictionary<string, PersistedEntraSessionAuthState>>(
-            stream,
-            SerializerOptions,
-            cancellationToken);
+        try
+        {
+            await using var stream = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var persisted = await JsonSerializer.DeserializeAsync<Dictionary<string, PersistedEntraSessionAuthState>>(
+                stream,
+                SerializerOptions,
+                cancellationToken);
 
-        return persisted ?? new Dictionary<string, PersistedEntraSessionAuthState>(StringComparer.Ordinal);
+            return persisted ?? new Dictionary<string, PersistedEntraSessionAuthState>(StringComparer.Ordinal);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Microsoft Entra auth state file at {AuthStateFilePath} could not be parsed. Returning an empty in-memory state.",
+                _filePath);
+            return new Dictionary<string, PersistedEntraSessionAuthState>(StringComparer.Ordinal);
+        }
     }
 
     private async Task WriteAllAsync(

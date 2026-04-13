@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpLogging;
 using ModelContextProtocol.Protocol;
 using WebApiApp.EntraAuth;
 using WebApiApp.Mcp;
@@ -20,6 +21,17 @@ Directory.CreateDirectory(dataDirectory);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields =
+        HttpLoggingFields.RequestMethod |
+        HttpLoggingFields.RequestPath |
+        HttpLoggingFields.ResponseStatusCode |
+        HttpLoggingFields.Duration |
+        HttpLoggingFields.RequestHeaders;
+    options.RequestHeaders.Add("Mcp-Session-Id");
+    options.RequestHeaders.Add("MCP-Protocol-Version");
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new ClientAppInfo(
@@ -62,6 +74,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection();
+app.UseHttpLogging();
 
 var summaries = new[]
 {

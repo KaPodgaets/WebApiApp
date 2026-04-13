@@ -28,6 +28,7 @@ public sealed class EntraDeviceFlowCoordinator
         string? requestedScope,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Starting Microsoft Entra device-flow sign-in for MCP session {McpSessionId}.", mcpSessionId);
         _options.EnsureConfigured();
 
         var sessionLock = _sessionLocks.GetOrAdd(mcpSessionId, static _ => new SemaphoreSlim(1, 1));
@@ -40,6 +41,7 @@ public sealed class EntraDeviceFlowCoordinator
                 : requestedScope.Trim();
 
             await ResetSessionInternalAsync(mcpSessionId, cancellationToken);
+            _logger.LogDebug("Previous auth state reset for MCP session {McpSessionId}.", mcpSessionId);
 
             var start = await _entraDeviceFlowClient.StartDeviceFlowAsync(scope, cancellationToken);
             var loginAttemptId = Guid.NewGuid().ToString("N");
@@ -62,6 +64,11 @@ public sealed class EntraDeviceFlowCoordinator
             };
 
             await _authStore.SaveAsync(state, cancellationToken);
+            _logger.LogInformation(
+                "Microsoft Entra device code created for MCP session {McpSessionId}, login attempt {LoginAttemptId}, expires at {ExpiresAtUtc}.",
+                mcpSessionId,
+                loginAttemptId,
+                start.ExpiresAtUtc);
 
             var pollerCts = new CancellationTokenSource();
             if (_pollers.TryGetValue(mcpSessionId, out var previousPoller))
@@ -75,6 +82,10 @@ public sealed class EntraDeviceFlowCoordinator
             _ = Task.Run(
                 () => PollForTokenAsync(mcpSessionId, loginAttemptId, pollerCts, pollerCts.Token),
                 CancellationToken.None);
+            _logger.LogDebug(
+                "Background Microsoft Entra polling started for MCP session {McpSessionId}, login attempt {LoginAttemptId}.",
+                mcpSessionId,
+                loginAttemptId);
 
             return new MsSignInStartToolResult(
                 ToToolStatus(state.Status),
@@ -95,6 +106,7 @@ public sealed class EntraDeviceFlowCoordinator
         string mcpSessionId,
         CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Loading Microsoft Entra sign-in status for MCP session {McpSessionId}.", mcpSessionId);
         var state = await _authStore.GetAsync(mcpSessionId, cancellationToken);
         if (state is null)
         {
@@ -110,6 +122,11 @@ public sealed class EntraDeviceFlowCoordinator
                 false,
                 null);
         }
+
+        _logger.LogInformation(
+            "Microsoft Entra sign-in status for MCP session {McpSessionId}: {Status}.",
+            mcpSessionId,
+            state.Status);
 
         return new MsSignInStatusToolResult(
             ToToolStatus(state.Status),
@@ -219,17 +236,30 @@ public sealed class EntraDeviceFlowCoordinator
                     current.Message = "Microsoft Entra sign-in completed.";
 
                     await _authStore.SaveAsync(current, cancellationToken);
+                    _logger.LogInformation(
+                        "Microsoft Entra sign-in completed for MCP session {McpSessionId}, login attempt {LoginAttemptId}.",
+                        mcpSessionId,
+                        loginAttemptId);
                     return;
                 }
 
                 switch (result.Error)
                 {
                     case "authorization_pending":
+                        _logger.LogDebug(
+                            "Microsoft Entra authorization is still pending for MCP session {McpSessionId}, login attempt {LoginAttemptId}.",
+                            mcpSessionId,
+                            loginAttemptId);
                         continue;
                     case "slow_down":
                         current.PollIntervalSeconds = Math.Max(current.PollIntervalSeconds + 5, 5);
                         current.LastError = result.ErrorDescription ?? "Microsoft Entra requested slower polling.";
                         await _authStore.SaveAsync(current, cancellationToken);
+                        _logger.LogWarning(
+                            "Microsoft Entra requested slower polling for MCP session {McpSessionId}, login attempt {LoginAttemptId}. New interval: {PollIntervalSeconds}s.",
+                            mcpSessionId,
+                            loginAttemptId,
+                            current.PollIntervalSeconds);
                         continue;
                     case "authorization_declined":
                         await FailAttemptAsync(
@@ -290,6 +320,11 @@ public sealed class EntraDeviceFlowCoordinator
         current.Message = null;
 
         await _authStore.SaveAsync(current, cancellationToken);
+        _logger.LogWarning(
+            "Microsoft Entra sign-in failed for MCP session {McpSessionId}, login attempt {LoginAttemptId}. Error: {ErrorMessage}",
+            mcpSessionId,
+            loginAttemptId,
+            errorMessage);
     }
 
     private static string ToToolStatus(EntraLoginStatus status) =>

@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol.Protocol;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
 using WebApiApp.EntraAuth;
 
@@ -10,7 +11,9 @@ public sealed record ClientAppInfo(string ClientAppId);
 [McpServerToolType]
 public sealed class WebApiMcpTools(
     ClientAppInfo clientAppInfo,
-    EntraDeviceFlowCoordinator entraDeviceFlowCoordinator)
+    EntraDeviceFlowCoordinator entraDeviceFlowCoordinator,
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<WebApiMcpTools> logger)
 {
     [McpServerTool(
         Name = "sum_digits",
@@ -92,7 +95,11 @@ public sealed class WebApiMcpTools(
         [Description("Optional delegated OAuth scope string. If omitted, the server default scope is used.")] string? scope,
         CancellationToken cancellationToken)
     {
-        var mcpSessionId = ResolveMcpSessionId(request);
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool ms_sign_in called for session {McpSessionId}. Scope provided: {HasScope}.",
+            mcpSessionId,
+            !string.IsNullOrWhiteSpace(scope));
         return entraDeviceFlowCoordinator.StartSignInAsync(mcpSessionId, scope, cancellationToken);
     }
 
@@ -109,8 +116,27 @@ public sealed class WebApiMcpTools(
         RequestContext<CallToolRequestParams> request,
         CancellationToken cancellationToken)
     {
-        var mcpSessionId = ResolveMcpSessionId(request);
-        return entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken);
+        try
+        {
+            var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+            logger.LogInformation("MCP tool ms_sign_in_status called for session {McpSessionId}.", mcpSessionId);
+            return entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "MCP tool ms_sign_in_status failed before status could be returned.");
+            return Task.FromResult(new MsSignInStatusToolResult(
+                "failed",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                ex.Message));
+        }
     }
 
     private static void ValidateDigit(int value, string parameterName)
@@ -124,9 +150,16 @@ public sealed class WebApiMcpTools(
         }
     }
 
-    private static string ResolveMcpSessionId(RequestContext<CallToolRequestParams> request)
+    private static string ResolveMcpSessionId(
+        RequestContext<CallToolRequestParams> request,
+        IHttpContextAccessor httpContextAccessor)
     {
         var sessionId = request.JsonRpcRequest.Context?.RelatedTransport?.SessionId;
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            sessionId = httpContextAccessor.HttpContext?.Request.Headers["Mcp-Session-Id"].ToString();
+        }
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             throw new InvalidOperationException(
