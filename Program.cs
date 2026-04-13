@@ -1,8 +1,26 @@
+using ModelContextProtocol.Protocol;
+using WebApiApp.Mcp;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services
+    .AddMcpServer(options =>
+    {
+        options.ServerInfo = new Implementation
+        {
+            Name = "web-api-app",
+            Version = "1.0.0"
+        };
+        options.ServerInstructions =
+            "Use the exposed tools for single-digit addition, single-digit multiplication, and reading the current UTC date and time.";
+    })
+    .WithTools<WebApiMcpTools>()
+    .WithHttpTransport()
+    .AddAuthorizationFilters();
 
 var app = builder.Build();
 
@@ -23,10 +41,23 @@ app.MapGet("/", () => Results.Ok(new
 {
     application = app.Environment.ApplicationName,
     environment = app.Environment.EnvironmentName,
-    status = "ok"
+    status = "ok",
+    mcp = new
+    {
+        endpoint = "/mcp",
+        transport = "streamable-http",
+        tools = new[]
+        {
+            "sum_digits",
+            "multiply_digits",
+            "get_utc_datetime"
+        }
+    }
 }));
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+app.MapControllers();
+app.MapMcp("/mcp");
 
 app.MapGet("/weatherforecast", () =>
 {
