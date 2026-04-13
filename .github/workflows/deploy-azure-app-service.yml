@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 env:
-  AZURE_WEBAPP_NAME: REPLACE_WITH_YOUR_APP_SERVICE_NAME
+  AZURE_WEBAPP_NAME: mcp-bridge-linux
   PROJECT_PATH: ./WebApiApp.csproj
   DOTNET_VERSION: 10.0.x
   PUBLISH_PATH: ${{ github.workspace }}/publish
