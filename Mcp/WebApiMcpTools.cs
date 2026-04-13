@@ -92,8 +92,8 @@ public sealed class WebApiMcpTools(
     [Description("Starts Microsoft Entra ID device-flow sign in for the current MCP session. Each call resets any previous sign-in state for this session.")]
     public Task<MsSignInStartToolResult> MsSignIn(
         RequestContext<CallToolRequestParams> request,
-        [Description("Optional delegated OAuth scope string. If omitted, the server default scope is used.")] string? scope,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        [Description("Optional delegated OAuth scope string. If omitted, the server default scope is used.")] string? scope = null)
     {
         var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
         logger.LogInformation(
