@@ -19,6 +19,15 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
+app.MapGet("/", () => Results.Ok(new
+{
+    application = app.Environment.ApplicationName,
+    environment = app.Environment.EnvironmentName,
+    status = "ok"
+}));
+
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
 app.MapGet("/weatherforecast", () =>
 {
     var forecast =  Enumerable.Range(1, 5).Select(index =>
@@ -32,6 +41,22 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+var portValue = Environment.GetEnvironmentVariable("PORT");
+var hasExplicitBinding =
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("URLS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOTNET_URLS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HTTP_PORTS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_HTTP_PORTS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOTNET_HTTP_PORTS"));
+
+// Azure App Service injects settings as environment variables. If the platform provides only PORT,
+// bind Kestrel to it without overriding explicit URL/port configuration.
+if (!hasExplicitBinding && int.TryParse(portValue, out var port))
+{
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
 
 app.Run();
 

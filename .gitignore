@@ -1,0 +1,11 @@
+/bin/
+/obj/
+/artifacts/
+
+/.idea/
+/.vs/
+
+*.user
+*.suo
+obj/Debug/net10.0/WebApiApp.AssemblyInfo.cs
+obj/Debug/net10.0/WebApiApp.AssemblyInfoInputs.cache
