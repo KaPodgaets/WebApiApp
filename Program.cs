@@ -3,6 +3,11 @@ using WebApiApp.EntraAuth;
 using WebApiApp.Mcp;
 
 var builder = WebApplication.CreateBuilder(args);
+var entraSection = builder.Configuration.GetSection("EntraId");
+var entraScopes = entraSection.GetSection("Scopes").Get<string[]>();
+var defaultScope = entraScopes is { Length: > 0 }
+    ? string.Join(' ', entraScopes)
+    : "User.Read offline_access openid profile";
 var dataDirectory = PathResolver.Resolve(
     builder.Configuration["ENTRA_DATA_DIRECTORY"] ??
     "data");
@@ -18,15 +23,15 @@ builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new ClientAppInfo(
-    builder.Configuration["CLIENT_APP_ID"] ??
+    entraSection["ClientId"] ??
     string.Empty));
 builder.Services.AddSingleton(new EntraAuthOptions(
-    builder.Configuration["CLIENT_APP_ID"] ??
+    entraSection["ClientId"] ??
     string.Empty,
-    builder.Configuration["ENTRA_TENANT_ID"] ??
+    entraSection["TenantId"] ??
     string.Empty,
-    builder.Configuration["ENTRA_SCOPE"] ??
-    "User.Read offline_access openid profile",
+    defaultScope,
+    entraSection["AuthorityHost"] ??
     builder.Configuration["ENTRA_AUTHORITY_HOST"] ??
     "https://login.microsoftonline.com",
     authStateFilePath));

@@ -18,13 +18,13 @@ public sealed record EntraAuthOptions(
         if (string.IsNullOrWhiteSpace(ClientAppId))
         {
             throw new InvalidOperationException(
-                "CLIENT_APP_ID is not configured. Add it to configuration or the .env file.");
+                "EntraId:ClientId is not configured. Add it to the EntraId section in appsettings.");
         }
 
         if (string.IsNullOrWhiteSpace(TenantId))
         {
             throw new InvalidOperationException(
-                "ENTRA_TENANT_ID is not configured. Add it to configuration or the .env file.");
+                "EntraId:TenantId is not configured. Add it to the EntraId section in appsettings.");
         }
     }
 }
