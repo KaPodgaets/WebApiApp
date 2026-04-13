@@ -1,12 +1,16 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol.Protocol;
 using System.ComponentModel;
+using WebApiApp.EntraAuth;
 
 namespace WebApiApp.Mcp;
 
 public sealed record ClientAppInfo(string ClientAppId);
 
 [McpServerToolType]
-public sealed class WebApiMcpTools(ClientAppInfo clientAppInfo)
+public sealed class WebApiMcpTools(
+    ClientAppInfo clientAppInfo,
+    EntraDeviceFlowCoordinator entraDeviceFlowCoordinator)
 {
     [McpServerTool(
         Name = "sum_digits",
@@ -74,6 +78,41 @@ public sealed class WebApiMcpTools(ClientAppInfo clientAppInfo)
         return new(clientAppInfo.ClientAppId);
     }
 
+    [McpServerTool(
+        Name = "ms_sign_in",
+        Title = "MS Sign In",
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = false,
+        ReadOnly = false,
+        UseStructuredContent = true)]
+    [Description("Starts Microsoft Entra ID device-flow sign in for the current MCP session. Each call resets any previous sign-in state for this session.")]
+    public Task<MsSignInStartToolResult> MsSignIn(
+        RequestContext<CallToolRequestParams> request,
+        [Description("Optional delegated OAuth scope string. If omitted, the server default scope is used.")] string? scope,
+        CancellationToken cancellationToken)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request);
+        return entraDeviceFlowCoordinator.StartSignInAsync(mcpSessionId, scope, cancellationToken);
+    }
+
+    [McpServerTool(
+        Name = "ms_sign_in_status",
+        Title = "MS Sign In Status",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns the current Microsoft Entra ID sign-in status for the current MCP session.")]
+    public Task<MsSignInStatusToolResult> MsSignInStatus(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request);
+        return entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken);
+    }
+
     private static void ValidateDigit(int value, string parameterName)
     {
         if (value is < 0 or > 9)
@@ -83,6 +122,18 @@ public sealed class WebApiMcpTools(ClientAppInfo clientAppInfo)
                 value,
                 "The value must be a single digit between 0 and 9.");
         }
+    }
+
+    private static string ResolveMcpSessionId(RequestContext<CallToolRequestParams> request)
+    {
+        var sessionId = request.JsonRpcRequest.Context?.RelatedTransport?.SessionId;
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            throw new InvalidOperationException(
+                "The current MCP request does not have an associated session id. Initialize the MCP session before calling this tool.");
+        }
+
+        return sessionId;
     }
 }
 

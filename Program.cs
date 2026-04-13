@@ -1,18 +1,38 @@
 using ModelContextProtocol.Protocol;
+using WebApiApp.EntraAuth;
 using WebApiApp.Mcp;
 
-EnvFileLoader.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
-
 var builder = WebApplication.CreateBuilder(args);
+var dataDirectory = PathResolver.Resolve(
+    builder.Configuration["ENTRA_DATA_DIRECTORY"] ??
+    "data");
+var authStateFilePath = PathResolver.Resolve(
+    builder.Configuration["ENTRA_AUTH_STATE_FILE_PATH"] ??
+    Path.Combine(dataDirectory, "entra-auth-state.json"));
+
+Directory.CreateDirectory(dataDirectory);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton(new ClientAppInfo(
     builder.Configuration["CLIENT_APP_ID"] ??
-    Environment.GetEnvironmentVariable("CLIENT_APP_ID") ??
     string.Empty));
+builder.Services.AddSingleton(new EntraAuthOptions(
+    builder.Configuration["CLIENT_APP_ID"] ??
+    string.Empty,
+    builder.Configuration["ENTRA_TENANT_ID"] ??
+    string.Empty,
+    builder.Configuration["ENTRA_SCOPE"] ??
+    "User.Read offline_access openid profile",
+    builder.Configuration["ENTRA_AUTHORITY_HOST"] ??
+    "https://login.microsoftonline.com",
+    authStateFilePath));
+builder.Services.AddHttpClient<EntraDeviceFlowClient>();
+builder.Services.AddSingleton<IEntraSessionAuthStore, JsonEntraSessionAuthStore>();
+builder.Services.AddSingleton<EntraDeviceFlowCoordinator>();
 builder.Services
     .AddMcpServer(options =>
     {
@@ -22,7 +42,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, and reading the current UTC date and time.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, and Microsoft Entra ID device-flow sign in tied to the current MCP session.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -57,7 +77,9 @@ app.MapGet("/", () => Results.Ok(new
             "sum_digits",
             "multiply_digits",
             "get_utc_datetime",
-            "get_client_app_id"
+            "get_client_app_id",
+            "ms_sign_in",
+            "ms_sign_in_status"
         }
     }
 }));
@@ -103,37 +125,12 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
 
-static class EnvFileLoader
+static class PathResolver
 {
-    public static void Load(string filePath)
+    public static string Resolve(string path)
     {
-        if (!File.Exists(filePath))
-        {
-            return;
-        }
-
-        foreach (var rawLine in File.ReadAllLines(filePath))
-        {
-            var line = rawLine.Trim();
-            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
-            {
-                continue;
-            }
-
-            var separatorIndex = line.IndexOf('=');
-            if (separatorIndex <= 0)
-            {
-                continue;
-            }
-
-            var key = line[..separatorIndex].Trim();
-            var value = line[(separatorIndex + 1)..].Trim().Trim('"');
-
-            if (!string.IsNullOrWhiteSpace(key) &&
-                string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
-            {
-                Environment.SetEnvironmentVariable(key, value);
-            }
-        }
+        return Path.IsPathRooted(path)
+            ? path
+            : Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), path));
     }
 }
