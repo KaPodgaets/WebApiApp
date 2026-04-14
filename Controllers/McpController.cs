@@ -24,7 +24,8 @@ public sealed class McpController : ControllerBase
                 "ms_sign_in_status",
                 "powerbi_get_semantic_model_schema",
                 "powerbi_generate_query",
-                "powerbi_execute_query"
+                "powerbi_execute_query",
+                "powerbi_execute_dax_rest"
             }
         });
     }

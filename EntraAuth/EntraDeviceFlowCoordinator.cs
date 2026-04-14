@@ -119,6 +119,8 @@ public sealed class EntraDeviceFlowCoordinator
                 null,
                 null,
                 null,
+                null,
+                null,
                 false,
                 false,
                 null);
@@ -133,6 +135,8 @@ public sealed class EntraDeviceFlowCoordinator
             ToToolStatus(state.Status),
             state.LoginAttemptId,
             state.PowerBiSemanticModelId,
+            state.PowerBiWorkspaceId,
+            state.PowerBiDatasetId,
             state.VerificationUri,
             state.UserCode,
             state.Scope,

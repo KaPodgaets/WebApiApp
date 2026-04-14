@@ -3,6 +3,7 @@ using ModelContextProtocol.Protocol;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
 using WebApiApp.EntraAuth;
+using WebApiApp.PowerBiRest;
 using WebApiApp.PowerBiRemote;
 
 namespace WebApiApp.Mcp;
@@ -14,6 +15,7 @@ public sealed class WebApiMcpTools(
     ClientAppInfo clientAppInfo,
     EntraDeviceFlowCoordinator entraDeviceFlowCoordinator,
     PowerBiRemoteProxyCoordinator powerBiRemoteProxyCoordinator,
+    PowerBiRestQueryCoordinator powerBiRestQueryCoordinator,
     IHttpContextAccessor httpContextAccessor,
     ILogger<WebApiMcpTools> logger)
 {
@@ -136,6 +138,8 @@ public sealed class WebApiMcpTools(
                 null,
                 null,
                 null,
+                null,
+                null,
                 false,
                 false,
                 ex.Message));
@@ -229,6 +233,41 @@ public sealed class WebApiMcpTools(
             artifactId,
             daxQuery,
             maxRows,
+            cancellationToken);
+    }
+
+    [McpServerTool(
+        Name = "powerbi_execute_dax_rest",
+        Title = "Power BI Execute DAX REST",
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        UseStructuredContent = true)]
+    [Description("Executes a DAX query directly against the Power BI REST executeQueries endpoint using the signed-in user's access token and returns the flattened result rows.")]
+    public async Task<Dictionary<string, object?>> PowerBiExecuteDaxRest(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken,
+        [Description("A valid DAX query to execute. It should begin with EVALUATE.")] string daxQuery,
+        [Description("Optional GUID of the Power BI workspace that owns the dataset. If omitted, the server reuses the current MCP session's remembered workspace id.")] string? workspaceId = null,
+        [Description("Optional GUID of the Power BI dataset (semantic model) to query. If omitted, the server reuses the current MCP session's remembered dataset id.")] string? datasetId = null,
+        [Description("Optional maximum number of rows to return by wrapping the DAX query in TOPN at the engine level.")] int? maxRows = null,
+        [Description("Whether null values should be included in the Power BI REST response. Defaults to true.")] bool includeNulls = true)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool powerbi_execute_dax_rest called for session {McpSessionId}, workspace {WorkspaceId}, dataset {DatasetId}.",
+            mcpSessionId,
+            workspaceId ?? "<remembered>",
+            datasetId ?? "<remembered>");
+
+        return await powerBiRestQueryCoordinator.ExecuteDaxAsync(
+            mcpSessionId,
+            daxQuery,
+            workspaceId,
+            datasetId,
+            maxRows,
+            includeNulls,
             cancellationToken);
     }
 
