@@ -22,14 +22,6 @@ public sealed class WebApiMcpTools(
 {
     private static readonly JsonSerializerOptions LogSerializerOptions = new(JsonSerializerDefaults.Web);
 
-    [McpServerTool(
-        Name = "sum_digits",
-        Title = "Sum Digits",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Adds two single-digit integers and returns the result.")]
     public MathToolResult SumDigits(
         [Description("First digit from 0 through 9.")] int left,
@@ -41,14 +33,6 @@ public sealed class WebApiMcpTools(
         return new("sum", left, right, left + right);
     }
 
-    [McpServerTool(
-        Name = "multiply_digits",
-        Title = "Multiply Digits",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Multiplies two single-digit integers and returns the result.")]
     public MathToolResult MultiplyDigits(
         [Description("First digit from 0 through 9.")] int left,
@@ -60,28 +44,12 @@ public sealed class WebApiMcpTools(
         return new("multiplication", left, right, left * right);
     }
 
-    [McpServerTool(
-        Name = "get_utc_datetime",
-        Title = "Get UTC Datetime",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Returns the current UTC date and time in ISO 8601 format.")]
     public UtcDateTimeToolResult GetUtcDatetime()
     {
         return new(DateTimeOffset.UtcNow.ToString("O"));
     }
 
-    [McpServerTool(
-        Name = "get_client_app_id",
-        Title = "Get Client App Id",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Returns the configured client application id from the environment.")]
     public ClientAppIdToolResult GetClientAppId()
     {
@@ -151,14 +119,6 @@ public sealed class WebApiMcpTools(
         }
     }
 
-    [McpServerTool(
-        Name = "ms_sign_in_status_minimal",
-        Title = "MS Sign In Status Minimal",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Returns a minimal Microsoft Entra ID sign-in status shape for the current MCP session. Use this to debug MCP client compatibility with tool responses.")]
     public async Task<MsSignInStatusMinimalToolResult> MsSignInStatusMinimal(
         RequestContext<CallToolRequestParams> request,
@@ -188,14 +148,6 @@ public sealed class WebApiMcpTools(
         }
     }
 
-    [McpServerTool(
-        Name = "mcp_echo_ok",
-        Title = "MCP Echo Ok",
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        UseStructuredContent = true)]
     [Description("Returns a tiny hardcoded result to help debug MCP client handling of simple structured tool responses.")]
     public EchoOkToolResult McpEchoOk()
     {
@@ -246,14 +198,6 @@ public sealed class WebApiMcpTools(
             cancellationToken);
     }
 
-    [McpServerTool(
-        Name = "powerbi_generate_query",
-        Title = "Power BI Generate Query",
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = false,
-        UseStructuredContent = true)]
     [Description("Proxy for the remote Power BI MCP tool GenerateQuery. Generates a DAX query for the given artifact id and user input.")]
     public async Task<Dictionary<string, object?>> PowerBiGenerateQuery(
         RequestContext<CallToolRequestParams> request,
@@ -280,14 +224,6 @@ public sealed class WebApiMcpTools(
             cancellationToken);
     }
 
-    [McpServerTool(
-        Name = "powerbi_execute_query",
-        Title = "Power BI Execute Query",
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = true,
-        ReadOnly = false,
-        UseStructuredContent = true)]
     [Description("Proxy for the remote Power BI MCP tool ExecuteQuery. Executes a DAX query for the given artifact id and returns the remote result.")]
     public async Task<Dictionary<string, object?>> PowerBiExecuteQuery(
         RequestContext<CallToolRequestParams> request,
