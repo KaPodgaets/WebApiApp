@@ -119,6 +119,8 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
             LoginAttemptId = state.LoginAttemptId,
             Status = state.Status,
             PowerBiSemanticModelId = state.PowerBiSemanticModelId,
+            PowerBiWorkspaceId = state.PowerBiWorkspaceId,
+            PowerBiDatasetId = state.PowerBiDatasetId,
             VerificationUri = state.VerificationUri,
             UserCode = state.UserCode,
             Scope = state.Scope,
@@ -142,6 +144,8 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
             LoginAttemptId = state.LoginAttemptId,
             Status = state.Status,
             PowerBiSemanticModelId = state.PowerBiSemanticModelId,
+            PowerBiWorkspaceId = state.PowerBiWorkspaceId,
+            PowerBiDatasetId = state.PowerBiDatasetId,
             VerificationUri = state.VerificationUri,
             UserCode = state.UserCode,
             Scope = state.Scope,
@@ -163,6 +167,8 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
         public string LoginAttemptId { get; init; } = string.Empty;
         public EntraLoginStatus Status { get; init; }
         public string? PowerBiSemanticModelId { get; init; }
+        public string? PowerBiWorkspaceId { get; init; }
+        public string? PowerBiDatasetId { get; init; }
         public string? VerificationUri { get; init; }
         public string? UserCode { get; init; }
         public string? Scope { get; init; }

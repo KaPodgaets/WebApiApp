@@ -80,10 +80,11 @@ public sealed class PowerBiRemoteProxyCoordinator
         int? maxRows,
         CancellationToken cancellationToken)
     {
+        var normalizedQuery = PowerBiDaxQueryNormalizer.Normalize(daxQuery);
         var arguments = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             ["artifactId"] = artifactId,
-            ["daxQuery"] = daxQuery
+            ["daxQuery"] = normalizedQuery
         };
 
         if (maxRows is not null)

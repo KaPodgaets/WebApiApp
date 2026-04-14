@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using ModelContextProtocol.Protocol;
 using WebApiApp.EntraAuth;
 using WebApiApp.Mcp;
+using WebApiApp.PowerBiRest;
 using WebApiApp.PowerBiRemote;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,11 +54,16 @@ builder.Services.AddSingleton(new PowerBiRemoteMcpOptions(
     "https://api.fabric.microsoft.com/v1/mcp/powerbi",
     builder.Configuration["PowerBiRemoteMcp:ProtocolVersion"] ??
     "2025-11-25"));
+builder.Services.AddSingleton(new PowerBiRestOptions(
+    builder.Configuration["PowerBiRest:BaseUrl"] ??
+    "https://api.powerbi.com/v1.0/myorg"));
 builder.Services.AddHttpClient<EntraDeviceFlowClient>();
 builder.Services.AddHttpClient<PowerBiRemoteMcpClient>();
+builder.Services.AddHttpClient<PowerBiRestClient>();
 builder.Services.AddSingleton<IEntraSessionAuthStore, JsonEntraSessionAuthStore>();
 builder.Services.AddSingleton<EntraDeviceFlowCoordinator>();
 builder.Services.AddSingleton<PowerBiRemoteProxyCoordinator>();
+builder.Services.AddSingleton<PowerBiRestQueryCoordinator>();
 builder.Services
     .AddMcpServer(options =>
     {
@@ -67,7 +73,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, Microsoft Entra ID device-flow sign in tied to the current MCP session, and proxying Power BI remote MCP operations with the signed-in user's access token.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, Microsoft Entra ID device-flow sign in tied to the current MCP session, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -100,15 +106,11 @@ app.MapGet("/", () => Results.Ok(new
         transport = "streamable-http",
         tools = new[]
         {
-            "sum_digits",
-            "multiply_digits",
-            "get_utc_datetime",
-            "get_client_app_id",
+            "mcp_echo_status",
             "ms_sign_in",
             "ms_sign_in_status",
             "powerbi_get_semantic_model_schema",
-            "powerbi_generate_query",
-            "powerbi_execute_query"
+            "powerbi_execute_dax_rest"
         }
     }
 }));
