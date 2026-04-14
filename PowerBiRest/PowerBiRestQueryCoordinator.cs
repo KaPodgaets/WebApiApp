@@ -1,5 +1,6 @@
 using System.Text.Json;
 using WebApiApp.EntraAuth;
+using WebApiApp.PowerBiRemote;
 
 namespace WebApiApp.PowerBiRest;
 
@@ -64,7 +65,9 @@ public sealed class PowerBiRestQueryCoordinator
                 "A Power BI dataset id is required. Pass datasetId or reuse a session that has one remembered.");
         }
 
-        var normalizedQuery = NormalizeDaxQuery(daxQuery, maxRows);
+        var normalizedQuery = NormalizeDaxQuery(
+            PowerBiDaxQueryNormalizer.Normalize(daxQuery),
+            maxRows);
 
         _logger.LogInformation(
             "Executing direct Power BI REST DAX query for MCP session {McpSessionId}, workspace {WorkspaceId}, dataset {DatasetId}.",
@@ -93,6 +96,12 @@ public sealed class PowerBiRestQueryCoordinator
         {
             throw new InvalidOperationException(
                 $"Power BI REST executeQueries returned 401 Unauthorized for dataset {datasetId}. Sign in again or verify the app registration and dataset permissions.",
+                ex);
+        }
+        catch (PowerBiRestApiException ex) when (ex.StatusCode == (int)System.Net.HttpStatusCode.BadRequest)
+        {
+            throw new InvalidOperationException(
+                $"Power BI REST executeQueries returned 400 Bad Request. This usually means the DAX query is invalid for the target dataset or the payload shape is not accepted. Detail: {ex.Message}",
                 ex);
         }
 
@@ -127,13 +136,22 @@ public sealed class PowerBiRestQueryCoordinator
         }
 
         var trimmed = daxQuery.Trim();
-        if (!trimmed.StartsWith("EVALUATE", StringComparison.OrdinalIgnoreCase))
+        if (!trimmed.Contains("EVALUATE", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                "The DAX query must begin with EVALUATE for Power BI executeQueries.");
+                "The DAX query must contain EVALUATE for Power BI executeQueries.");
         }
 
         if (maxRows is null || maxRows <= 0)
+        {
+            return trimmed;
+        }
+
+        // Only rewrite simple EVALUATE queries. Multi-statement DAX or queries with ORDER BY
+        // can be made invalid if we blindly wrap them in TOPN.
+        if (!trimmed.StartsWith("EVALUATE", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.Contains("DEFINE", StringComparison.OrdinalIgnoreCase))
         {
             return trimmed;
         }

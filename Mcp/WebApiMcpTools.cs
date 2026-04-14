@@ -228,12 +228,30 @@ public sealed class WebApiMcpTools(
             mcpSessionId,
             artifactId);
 
-        return await powerBiRemoteProxyCoordinator.ExecuteQueryAsync(
-            mcpSessionId,
-            artifactId,
-            daxQuery,
-            maxRows,
-            cancellationToken);
+        try
+        {
+            return await powerBiRemoteProxyCoordinator.ExecuteQueryAsync(
+                mcpSessionId,
+                artifactId,
+                daxQuery,
+                maxRows,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "MCP tool powerbi_execute_query failed for session {McpSessionId} and artifact {ArtifactId}.",
+                mcpSessionId,
+                artifactId);
+
+            return new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["status"] = "failed",
+                ["artifactId"] = artifactId,
+                ["errorMessage"] = ex.Message
+            };
+        }
     }
 
     [McpServerTool(
@@ -261,14 +279,37 @@ public sealed class WebApiMcpTools(
             workspaceId ?? "<remembered>",
             datasetId ?? "<remembered>");
 
-        return await powerBiRestQueryCoordinator.ExecuteDaxAsync(
-            mcpSessionId,
-            daxQuery,
-            workspaceId,
-            datasetId,
-            maxRows,
-            includeNulls,
-            cancellationToken);
+        try
+        {
+            return await powerBiRestQueryCoordinator.ExecuteDaxAsync(
+                mcpSessionId,
+                daxQuery,
+                workspaceId,
+                datasetId,
+                maxRows,
+                includeNulls,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "MCP tool powerbi_execute_dax_rest failed for session {McpSessionId}, workspace {WorkspaceId}, dataset {DatasetId}.",
+                mcpSessionId,
+                workspaceId ?? "<remembered>",
+                datasetId ?? "<remembered>");
+
+            return new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["status"] = "failed",
+                ["workspaceId"] = workspaceId,
+                ["datasetId"] = datasetId,
+                ["rowCount"] = 0,
+                ["columns"] = Array.Empty<string>(),
+                ["rows"] = Array.Empty<object>(),
+                ["errorMessage"] = ex.Message
+            };
+        }
     }
 
     private static void ValidateDigit(int value, string parameterName)

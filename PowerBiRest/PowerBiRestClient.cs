@@ -78,6 +78,11 @@ public sealed class PowerBiRestClient
         if (!response.IsSuccessStatusCode)
         {
             var detail = ExtractErrorMessage(responseElement) ?? response.ReasonPhrase ?? "Unknown error";
+            if (string.Equals(detail, "Bad Request", StringComparison.OrdinalIgnoreCase))
+            {
+                detail = responseBody;
+            }
+
             _logger.LogWarning(
                 "Power BI REST executeQueries failed with HTTP {StatusCode} for workspace {WorkspaceId}, dataset {DatasetId}. Detail: {Detail}",
                 (int)response.StatusCode,
