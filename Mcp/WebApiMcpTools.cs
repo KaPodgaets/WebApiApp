@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using ModelContextProtocol.Protocol;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
+using System.Text.Json;
 using WebApiApp.EntraAuth;
 using WebApiApp.PowerBiRest;
 using WebApiApp.PowerBiRemote;
@@ -19,6 +20,8 @@ public sealed class WebApiMcpTools(
     IHttpContextAccessor httpContextAccessor,
     ILogger<WebApiMcpTools> logger)
 {
+    private static readonly JsonSerializerOptions LogSerializerOptions = new(JsonSerializerDefaults.Web);
+
     [McpServerTool(
         Name = "sum_digits",
         Title = "Sum Digits",
@@ -124,7 +127,9 @@ public sealed class WebApiMcpTools(
         {
             var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
             logger.LogInformation("MCP tool ms_sign_in_status called for session {McpSessionId}.", mcpSessionId);
-            return entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken);
+            return LogStatusResultAsync(
+                mcpSessionId,
+                entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken));
         }
         catch (Exception ex)
         {
@@ -144,6 +149,75 @@ public sealed class WebApiMcpTools(
                 false,
                 ex.Message));
         }
+    }
+
+    [McpServerTool(
+        Name = "ms_sign_in_status_minimal",
+        Title = "MS Sign In Status Minimal",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns a minimal Microsoft Entra ID sign-in status shape for the current MCP session. Use this to debug MCP client compatibility with tool responses.")]
+    public async Task<MsSignInStatusMinimalToolResult> MsSignInStatusMinimal(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+            logger.LogInformation("MCP tool ms_sign_in_status_minimal called for session {McpSessionId}.", mcpSessionId);
+            var status = await entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken);
+            var result = new MsSignInStatusMinimalToolResult(
+                status.Status,
+                status.HasAccessToken,
+                status.LastError);
+
+            logger.LogInformation(
+                "MCP tool ms_sign_in_status_minimal result for session {McpSessionId}: {ResultJson}",
+                mcpSessionId,
+                JsonSerializer.Serialize(result, LogSerializerOptions));
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "MCP tool ms_sign_in_status_minimal failed before status could be returned.");
+            return new MsSignInStatusMinimalToolResult("failed", false, ex.Message);
+        }
+    }
+
+    [McpServerTool(
+        Name = "mcp_echo_ok",
+        Title = "MCP Echo Ok",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns a tiny hardcoded result to help debug MCP client handling of simple structured tool responses.")]
+    public EchoOkToolResult McpEchoOk()
+    {
+        var result = new EchoOkToolResult("ok", "probe");
+        logger.LogInformation("MCP tool mcp_echo_ok result: {ResultJson}", JsonSerializer.Serialize(result, LogSerializerOptions));
+        return result;
+    }
+
+    [McpServerTool(
+        Name = "mcp_echo_status",
+        Title = "MCP Echo Status",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns a tiny hardcoded status-shaped result to help debug MCP client handling of simple status objects.")]
+    public EchoStatusToolResult McpEchoStatus()
+    {
+        var result = new EchoStatusToolResult("authenticated", true, null);
+        logger.LogInformation("MCP tool mcp_echo_status result: {ResultJson}", JsonSerializer.Serialize(result, LogSerializerOptions));
+        return result;
     }
 
     [McpServerTool(
@@ -341,6 +415,18 @@ public sealed class WebApiMcpTools(
 
         return sessionId;
     }
+
+    private async Task<MsSignInStatusToolResult> LogStatusResultAsync(
+        string mcpSessionId,
+        Task<MsSignInStatusToolResult> statusTask)
+    {
+        var result = await statusTask;
+        logger.LogInformation(
+            "MCP tool ms_sign_in_status result for session {McpSessionId}: {ResultJson}",
+            mcpSessionId,
+            JsonSerializer.Serialize(result, LogSerializerOptions));
+        return result;
+    }
 }
 
 public sealed record MathToolResult(string Operation, int Left, int Right, int Result);
@@ -352,3 +438,17 @@ public sealed record ClientAppIdToolResult(string ClientAppId);
 public sealed record PowerBiChatHistoryMessage(
     string Role,
     string? Content);
+
+public sealed record MsSignInStatusMinimalToolResult(
+    string Status,
+    bool HasAccessToken,
+    string? LastError);
+
+public sealed record EchoOkToolResult(
+    string Status,
+    string Message);
+
+public sealed record EchoStatusToolResult(
+    string Status,
+    bool HasAccessToken,
+    string? LastError);
