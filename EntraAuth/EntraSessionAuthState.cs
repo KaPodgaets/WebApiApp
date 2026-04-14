@@ -13,6 +13,7 @@ public sealed class EntraSessionAuthState
     public string McpSessionId { get; init; } = string.Empty;
     public string LoginAttemptId { get; init; } = Guid.NewGuid().ToString("N");
     public EntraLoginStatus Status { get; set; } = EntraLoginStatus.SignedOut;
+    public string? PowerBiSemanticModelId { get; set; }
     public string? VerificationUri { get; set; }
     public string? UserCode { get; set; }
     public string? DeviceCode { get; set; }
@@ -39,6 +40,7 @@ public sealed record MsSignInStartToolResult(
 public sealed record MsSignInStatusToolResult(
     string Status,
     string? LoginAttemptId,
+    string? PowerBiSemanticModelId,
     string? VerificationUri,
     string? UserCode,
     string? Scope,
