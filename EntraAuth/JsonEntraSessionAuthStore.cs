@@ -118,6 +118,7 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
             McpSessionId = state.McpSessionId,
             LoginAttemptId = state.LoginAttemptId,
             Status = state.Status,
+            PowerBiSemanticModelId = state.PowerBiSemanticModelId,
             VerificationUri = state.VerificationUri,
             UserCode = state.UserCode,
             Scope = state.Scope,
@@ -140,6 +141,7 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
             McpSessionId = state.McpSessionId,
             LoginAttemptId = state.LoginAttemptId,
             Status = state.Status,
+            PowerBiSemanticModelId = state.PowerBiSemanticModelId,
             VerificationUri = state.VerificationUri,
             UserCode = state.UserCode,
             Scope = state.Scope,
@@ -160,6 +162,7 @@ public sealed class JsonEntraSessionAuthStore : IEntraSessionAuthStore
         public string McpSessionId { get; init; } = string.Empty;
         public string LoginAttemptId { get; init; } = string.Empty;
         public EntraLoginStatus Status { get; init; }
+        public string? PowerBiSemanticModelId { get; init; }
         public string? VerificationUri { get; init; }
         public string? UserCode { get; init; }
         public string? Scope { get; init; }

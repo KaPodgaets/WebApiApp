@@ -21,7 +21,10 @@ public sealed class McpController : ControllerBase
                 "get_utc_datetime",
                 "get_client_app_id",
                 "ms_sign_in",
-                "ms_sign_in_status"
+                "ms_sign_in_status",
+                "powerbi_get_semantic_model_schema",
+                "powerbi_generate_query",
+                "powerbi_execute_query"
             }
         });
     }

@@ -3,6 +3,7 @@ using ModelContextProtocol.Protocol;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
 using WebApiApp.EntraAuth;
+using WebApiApp.PowerBiRemote;
 
 namespace WebApiApp.Mcp;
 
@@ -12,6 +13,7 @@ public sealed record ClientAppInfo(string ClientAppId);
 public sealed class WebApiMcpTools(
     ClientAppInfo clientAppInfo,
     EntraDeviceFlowCoordinator entraDeviceFlowCoordinator,
+    PowerBiRemoteProxyCoordinator powerBiRemoteProxyCoordinator,
     IHttpContextAccessor httpContextAccessor,
     ILogger<WebApiMcpTools> logger)
 {
@@ -133,10 +135,101 @@ public sealed class WebApiMcpTools(
                 null,
                 null,
                 null,
+                null,
                 false,
                 false,
                 ex.Message));
         }
+    }
+
+    [McpServerTool(
+        Name = "powerbi_get_semantic_model_schema",
+        Title = "Power BI Get Semantic Model Schema",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Proxy for the remote Power BI MCP tool GetSemanticModelSchema. Retrieves semantic model schema, custom instructions, and verified answers for the specified artifact id.")]
+    public async Task<Dictionary<string, object?>> PowerBiGetSemanticModelSchema(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken,
+        [Description("The GUID of the artifact (semantic model or report) to fetch the schema for.")] string artifactId)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool powerbi_get_semantic_model_schema called for session {McpSessionId} and artifact {ArtifactId}.",
+            mcpSessionId,
+            artifactId);
+
+        return await powerBiRemoteProxyCoordinator.GetSemanticModelSchemaAsync(
+            mcpSessionId,
+            artifactId,
+            cancellationToken);
+    }
+
+    [McpServerTool(
+        Name = "powerbi_generate_query",
+        Title = "Power BI Generate Query",
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        UseStructuredContent = true)]
+    [Description("Proxy for the remote Power BI MCP tool GenerateQuery. Generates a DAX query for the given artifact id and user input.")]
+    public async Task<Dictionary<string, object?>> PowerBiGenerateQuery(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken,
+        [Description("The GUID of the artifact (semantic model or report) to generate the DAX query on.")] string artifactId,
+        [Description("The user's input for which the DAX query should be generated.")] string userInput,
+        [Description("Optional schema context with the relevant tables, columns, and measures.")] PowerBiSchemaSelection? schemaSelection = null,
+        [Description("Optional chat history for contextual DAX generation.")] List<PowerBiChatHistoryMessage>? chatHistory = null,
+        [Description("Optional list of specific data values mentioned in the user's question.")] List<string>? valueSearchTerms = null)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool powerbi_generate_query called for session {McpSessionId} and artifact {ArtifactId}.",
+            mcpSessionId,
+            artifactId);
+
+        return await powerBiRemoteProxyCoordinator.GenerateQueryAsync(
+            mcpSessionId,
+            artifactId,
+            userInput,
+            schemaSelection is null ? null : PowerBiRemoteProxyCoordinator.BuildSchemaSelection(schemaSelection),
+            chatHistory?.Select(message => PowerBiRemoteProxyCoordinator.BuildChatHistoryMessage(message.Role, message.Content)).ToList(),
+            valueSearchTerms,
+            cancellationToken);
+    }
+
+    [McpServerTool(
+        Name = "powerbi_execute_query",
+        Title = "Power BI Execute Query",
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        UseStructuredContent = true)]
+    [Description("Proxy for the remote Power BI MCP tool ExecuteQuery. Executes a DAX query for the given artifact id and returns the remote result.")]
+    public async Task<Dictionary<string, object?>> PowerBiExecuteQuery(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken,
+        [Description("The GUID of the artifact (semantic model or report) to execute the DAX query against.")] string artifactId,
+        [Description("The DAX query to execute against the underlying Power BI semantic model.")] string daxQuery,
+        [Description("Optional maximum number of rows to return. Default remote behavior is 250, maximum is 1000.")] int? maxRows = null)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool powerbi_execute_query called for session {McpSessionId} and artifact {ArtifactId}.",
+            mcpSessionId,
+            artifactId);
+
+        return await powerBiRemoteProxyCoordinator.ExecuteQueryAsync(
+            mcpSessionId,
+            artifactId,
+            daxQuery,
+            maxRows,
+            cancellationToken);
     }
 
     private static void ValidateDigit(int value, string parameterName)
@@ -175,3 +268,7 @@ public sealed record MathToolResult(string Operation, int Left, int Right, int R
 public sealed record UtcDateTimeToolResult(string UtcDateTime);
 
 public sealed record ClientAppIdToolResult(string ClientAppId);
+
+public sealed record PowerBiChatHistoryMessage(
+    string Role,
+    string? Content);

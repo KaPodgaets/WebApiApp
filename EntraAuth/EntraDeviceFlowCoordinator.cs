@@ -118,6 +118,7 @@ public sealed class EntraDeviceFlowCoordinator
                 null,
                 null,
                 null,
+                null,
                 false,
                 false,
                 null);
@@ -131,6 +132,7 @@ public sealed class EntraDeviceFlowCoordinator
         return new MsSignInStatusToolResult(
             ToToolStatus(state.Status),
             state.LoginAttemptId,
+            state.PowerBiSemanticModelId,
             state.VerificationUri,
             state.UserCode,
             state.Scope,
