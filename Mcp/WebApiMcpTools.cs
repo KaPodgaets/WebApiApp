@@ -136,15 +136,15 @@ public sealed class WebApiMcpTools(
             logger.LogError(ex, "MCP tool ms_sign_in_status failed before status could be returned.");
             return Task.FromResult(new MsSignInStatusToolResult(
                 "failed",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
                 false,
                 false,
                 ex.Message));
@@ -172,7 +172,7 @@ public sealed class WebApiMcpTools(
             var result = new MsSignInStatusMinimalToolResult(
                 status.Status,
                 status.HasAccessToken,
-                status.LastError);
+                status.LastError ?? string.Empty);
 
             logger.LogInformation(
                 "MCP tool ms_sign_in_status_minimal result for session {McpSessionId}: {ResultJson}",
@@ -215,7 +215,7 @@ public sealed class WebApiMcpTools(
     [Description("Returns a tiny hardcoded status-shaped result to help debug MCP client handling of simple status objects.")]
     public EchoStatusToolResult McpEchoStatus()
     {
-        var result = new EchoStatusToolResult("authenticated", true, null);
+        var result = new EchoStatusToolResult("authenticated", true, string.Empty);
         logger.LogInformation("MCP tool mcp_echo_status result: {ResultJson}", JsonSerializer.Serialize(result, LogSerializerOptions));
         return result;
     }
@@ -442,7 +442,7 @@ public sealed record PowerBiChatHistoryMessage(
 public sealed record MsSignInStatusMinimalToolResult(
     string Status,
     bool HasAccessToken,
-    string? LastError);
+    string LastError);
 
 public sealed record EchoOkToolResult(
     string Status,
@@ -451,4 +451,4 @@ public sealed record EchoOkToolResult(
 public sealed record EchoStatusToolResult(
     string Status,
     bool HasAccessToken,
-    string? LastError);
+    string LastError);

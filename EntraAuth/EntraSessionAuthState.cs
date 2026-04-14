@@ -41,15 +41,15 @@ public sealed record MsSignInStartToolResult(
 
 public sealed record MsSignInStatusToolResult(
     string Status,
-    string? LoginAttemptId,
-    string? PowerBiSemanticModelId,
-    string? PowerBiWorkspaceId,
-    string? PowerBiDatasetId,
-    string? VerificationUri,
-    string? UserCode,
-    string? Scope,
-    DateTimeOffset? DeviceCodeExpiresAtUtc,
-    DateTimeOffset? AccessTokenExpiresAtUtc,
+    string LoginAttemptId,
+    string PowerBiSemanticModelId,
+    string PowerBiWorkspaceId,
+    string PowerBiDatasetId,
+    string VerificationUri,
+    string UserCode,
+    string Scope,
+    string DeviceCodeExpiresAtUtc,
+    string AccessTokenExpiresAtUtc,
     bool HasAccessToken,
     bool HasRefreshToken,
-    string? LastError);
+    string LastError);

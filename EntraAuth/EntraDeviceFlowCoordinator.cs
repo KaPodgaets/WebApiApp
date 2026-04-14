@@ -112,18 +112,18 @@ public sealed class EntraDeviceFlowCoordinator
         {
             return new MsSignInStatusToolResult(
                 ToToolStatus(EntraLoginStatus.SignedOut),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
                 false,
                 false,
-                null);
+                string.Empty);
         }
 
         _logger.LogInformation(
@@ -134,17 +134,17 @@ public sealed class EntraDeviceFlowCoordinator
         return new MsSignInStatusToolResult(
             ToToolStatus(state.Status),
             state.LoginAttemptId,
-            state.PowerBiSemanticModelId,
-            state.PowerBiWorkspaceId,
-            state.PowerBiDatasetId,
-            state.VerificationUri,
-            state.UserCode,
-            state.Scope,
-            state.DeviceCodeExpiresAtUtc,
-            state.AccessTokenExpiresAtUtc,
+            state.PowerBiSemanticModelId ?? string.Empty,
+            state.PowerBiWorkspaceId ?? string.Empty,
+            state.PowerBiDatasetId ?? string.Empty,
+            state.VerificationUri ?? string.Empty,
+            state.UserCode ?? string.Empty,
+            state.Scope ?? string.Empty,
+            state.DeviceCodeExpiresAtUtc?.ToString("O") ?? string.Empty,
+            state.AccessTokenExpiresAtUtc?.ToString("O") ?? string.Empty,
             !string.IsNullOrWhiteSpace(state.AccessToken),
             !string.IsNullOrWhiteSpace(state.RefreshToken),
-            state.LastError);
+            state.LastError ?? string.Empty);
     }
 
     private async Task ResetSessionInternalAsync(string mcpSessionId, CancellationToken cancellationToken)
