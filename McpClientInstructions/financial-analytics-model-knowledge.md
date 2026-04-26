@@ -66,6 +66,42 @@ The user may override these defaults only by explicitly requesting a different c
 
 ---
 
+# Conditional Business Scope Filters
+
+Use these filters only when the user request clearly matches the specified business scope.
+
+## Expense-Only Scope Filter
+
+Apply this filter only when the user request is expense-only related.
+
+Expense-only related requests include questions about:
+
+- expenses
+- costs
+- spending
+- expense BvA
+- cost BvA
+- departmental expenses
+- operating expenses
+- budget variance for expenses
+- expense performance against budget
+
+When the request is expense-only related, every DAX query must exclude these values from `'Actual PBI'[Department]`:
+
+- `"Revenues"`
+- `"Financials"`
+
+Use this DAX filter pattern inside `SUMMARIZECOLUMNS`:
+
+```DAX
+FILTER(
+    KEEPFILTERS(VALUES('Actual PBI'[Department])),
+    NOT('Actual PBI'[Department] IN {"Revenues", "Financials"})
+)
+
+---
+
+
 ## Multi-Measure Dimension Rule
 
 When a query uses multiple measures, use only dimensions that are allowed for all selected measures.
