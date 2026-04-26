@@ -7,3 +7,7 @@
 - create DAX query (on Client side)
 - execute DAX query (invoke tool)
 - craft answer (on Client side)
+
+
+# Ideas Backlog
+- track session status (log) and return fail when MCP client does not use tools in correct order
