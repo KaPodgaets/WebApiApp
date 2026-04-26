@@ -16,12 +16,12 @@ public sealed class McpController : ControllerBase
             transport = "streamable-http",
             tools = new[]
             {
-                "discover_workflow",
+                "start_financial_analytics_workflow",
                 "mcp_echo_status",
                 "ms_sign_in",
-                "ms_sign_in_status",
+                "verify_powerbi_authentication",
                 "powerbi_get_semantic_model_schema",
-                "financial_analytics_model_knowledge",
+                "get_required_semantic_model_knowledge",
                 "powerbi_list_workspaces_and_models_rest",
                 "powerbi_execute_dax_rest"
             }

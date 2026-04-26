@@ -4,6 +4,10 @@
 
 Use this knowledge package to plan and build DAX queries for Budget vs Actual analysis in the Financial Analytics semantic model.
 
+## Model ids
+workspace id - be12499c-6e33-4575-9535-c66fe0764859
+artifact id - f1a550a2-2a82-442f-aa88-64db229b6d51
+
 ---
 # How To Apply This Knowledge
 
