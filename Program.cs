@@ -60,6 +60,7 @@ builder.Services.AddSingleton(new PowerBiRestOptions(
 builder.Services.AddHttpClient<EntraDeviceFlowClient>();
 builder.Services.AddHttpClient<PowerBiRemoteMcpClient>();
 builder.Services.AddHttpClient<PowerBiRestClient>();
+builder.Services.AddSingleton<WorkflowInstructionCatalog>();
 builder.Services.AddSingleton<IEntraSessionAuthStore, JsonEntraSessionAuthStore>();
 builder.Services.AddSingleton<EntraDeviceFlowCoordinator>();
 builder.Services.AddSingleton<PowerBiRemoteProxyCoordinator>();
@@ -73,7 +74,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, Microsoft Entra ID device-flow sign in tied to the current MCP session, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, discovering the default analytical workflow with discover_workflow, Microsoft Entra ID device-flow sign in tied to the current MCP session, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -106,6 +107,7 @@ app.MapGet("/", () => Results.Ok(new
         transport = "streamable-http",
         tools = new[]
         {
+            "discover_workflow",
             "mcp_echo_status",
             "ms_sign_in",
             "ms_sign_in_status",
