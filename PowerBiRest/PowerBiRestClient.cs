@@ -100,6 +100,83 @@ public sealed class PowerBiRestClient
         return responseElement;
     }
 
+    public Task<JsonElement> ListWorkspacesAsync(
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        _options.EnsureConfigured();
+
+        var endpoint = $"{_options.BaseUrl.TrimEnd('/')}/groups";
+        return SendJsonAsync(HttpMethod.Get, endpoint, accessToken, cancellationToken);
+    }
+
+    public Task<JsonElement> ListDatasetsAsync(
+        string accessToken,
+        string workspaceId,
+        CancellationToken cancellationToken)
+    {
+        _options.EnsureConfigured();
+
+        var endpoint = $"{_options.BaseUrl.TrimEnd('/')}/groups/{workspaceId}/datasets";
+        return SendJsonAsync(HttpMethod.Get, endpoint, accessToken, cancellationToken);
+    }
+
+    private async Task<JsonElement> SendJsonAsync(
+        HttpMethod method,
+        string endpoint,
+        string accessToken,
+        CancellationToken cancellationToken,
+        HttpContent? content = null)
+    {
+        using var request = new HttpRequestMessage(method, endpoint)
+        {
+            Content = content
+        };
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        JsonElement responseElement;
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            responseElement = document.RootElement.Clone();
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Power BI REST endpoint '{endpoint}' returned unreadable JSON with HTTP {(int)response.StatusCode}.",
+                ex);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = ExtractErrorMessage(responseElement) ?? response.ReasonPhrase ?? "Unknown error";
+            if (string.Equals(detail, "Bad Request", StringComparison.OrdinalIgnoreCase))
+            {
+                detail = responseBody;
+            }
+
+            _logger.LogWarning(
+                "Power BI REST request {Method} {Endpoint} failed with HTTP {StatusCode}. Detail: {Detail}",
+                method.Method,
+                endpoint,
+                (int)response.StatusCode,
+                detail);
+            throw new PowerBiRestApiException((int)response.StatusCode, detail);
+        }
+
+        _logger.LogInformation(
+            "Power BI REST request {Method} {Endpoint} succeeded.",
+            method.Method,
+            endpoint);
+
+        return responseElement;
+    }
+
     private static string? ExtractErrorMessage(JsonElement element)
     {
         if (element.ValueKind != JsonValueKind.Object ||
