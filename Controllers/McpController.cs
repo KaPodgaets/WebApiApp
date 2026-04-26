@@ -16,6 +16,7 @@ public sealed class McpController : ControllerBase
             transport = "streamable-http",
             tools = new[]
             {
+                "discover_workflow",
                 "mcp_echo_status",
                 "ms_sign_in",
                 "ms_sign_in_status",

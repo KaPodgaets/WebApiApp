@@ -14,6 +14,7 @@ public sealed record ClientAppInfo(string ClientAppId);
 [McpServerToolType]
 public sealed class WebApiMcpTools(
     ClientAppInfo clientAppInfo,
+    WorkflowInstructionCatalog workflowInstructionCatalog,
     EntraDeviceFlowCoordinator entraDeviceFlowCoordinator,
     PowerBiRemoteProxyCoordinator powerBiRemoteProxyCoordinator,
     PowerBiRestQueryCoordinator powerBiRestQueryCoordinator,
@@ -54,6 +55,31 @@ public sealed class WebApiMcpTools(
     public ClientAppIdToolResult GetClientAppId()
     {
         return new(clientAppInfo.ClientAppId);
+    }
+
+    [McpServerTool(
+        Name = "discover_workflow",
+        Title = "Discover Workflow",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns the default analytical workflow instruction for the MCP client, including sign-in, theme discovery, knowledge lookup, and DAX execution guidance.")]
+    public WorkflowInstructionToolResult DiscoverWorkflow()
+    {
+        var instruction = workflowInstructionCatalog.GetDiscoverWorkflowInstruction();
+        var result = new WorkflowInstructionToolResult(
+            instruction.Name,
+            instruction.Title,
+            instruction.FileName,
+            instruction.Markdown);
+
+        logger.LogInformation(
+            "MCP tool discover_workflow result loaded from {FileName}.",
+            instruction.FileName);
+
+        return result;
     }
 
     [McpServerTool(
@@ -370,6 +396,12 @@ public sealed record MathToolResult(string Operation, int Left, int Right, int R
 public sealed record UtcDateTimeToolResult(string UtcDateTime);
 
 public sealed record ClientAppIdToolResult(string ClientAppId);
+
+public sealed record WorkflowInstructionToolResult(
+    string Name,
+    string Title,
+    string FileName,
+    string Markdown);
 
 public sealed record PowerBiChatHistoryMessage(
     string Role,
