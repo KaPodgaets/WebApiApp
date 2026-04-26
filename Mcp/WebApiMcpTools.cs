@@ -58,17 +58,17 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
-        Name = "discover_workflow",
-        Title = "Discover Workflow",
+        Name = "start_financial_analytics_workflow",
+        Title = "Start Financial Analytics Workflow",
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
         UseStructuredContent = true)]
-    [Description("Returns the default analytical workflow instruction for the MCP client, including sign-in, theme discovery, knowledge lookup, and DAX execution guidance.")]
-    public WorkflowInstructionToolResult DiscoverWorkflow()
+    [Description("Returns the default Financial Analytics workflow instruction for the MCP client, including sign-in, authentication verification, knowledge lookup, semantic model discovery, and DAX execution guidance.")]
+    public WorkflowInstructionToolResult StartFinancialAnalyticsWorkflow()
     {
-        var instruction = workflowInstructionCatalog.GetDiscoverWorkflowInstruction();
+        var instruction = workflowInstructionCatalog.GetStartFinancialAnalyticsWorkflowInstruction();
         var result = new WorkflowInstructionToolResult(
             instruction.Name,
             instruction.Title,
@@ -76,24 +76,24 @@ public sealed class WebApiMcpTools(
             instruction.Markdown);
 
         logger.LogInformation(
-            "MCP tool discover_workflow result loaded from {FileName}.",
+            "MCP tool start_financial_analytics_workflow result loaded from {FileName}.",
             instruction.FileName);
 
         return result;
     }
 
     [McpServerTool(
-        Name = "financial_analytics_model_knowledge",
-        Title = "Financial Analytics Model Knowledge",
+        Name = "get_required_financial_analytics_model_knowledge",
+        Title = "Get Required Financial Analytics Model Knowledge",
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
         UseStructuredContent = true)]
     [Description("Returns Financial Analytics model knowledge for the MCP client, including allowed measures, optional dimensions, and guidance on when to use each measure. This model covers BvA, Revenue Analysis, Expenses, Vendor Bills, Customer Payments, Balance Sheet, and Profit and Loss.")]
-    public WorkflowInstructionToolResult FinancialAnalyticsModelKnowledge()
+    public WorkflowInstructionToolResult GetRequiredFinancialAnalyticsModelKnowledge()
     {
-        var instruction = workflowInstructionCatalog.GetFinancialAnalyticsModelKnowledgeInstruction();
+        var instruction = workflowInstructionCatalog.GetRequiredFinancialAnalyticsModelKnowledgeInstruction();
         var result = new WorkflowInstructionToolResult(
             instruction.Name,
             instruction.Title,
@@ -101,7 +101,7 @@ public sealed class WebApiMcpTools(
             instruction.Markdown);
 
         logger.LogInformation(
-            "MCP tool financial_analytics_model_knowledge result loaded from {FileName}.",
+            "MCP tool get_required_financial_analytics_model_knowledge result loaded from {FileName}.",
             instruction.FileName);
 
         return result;
@@ -172,29 +172,29 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
-        Name = "ms_sign_in_status",
-        Title = "MS Sign In Status",
+        Name = "verify_powerbi_authentication",
+        Title = "Verify Power BI Authentication",
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
         UseStructuredContent = true)]
-    [Description("Returns the current Microsoft Entra ID sign-in status for the current MCP session.")]
-    public Task<MsSignInStatusToolResult> MsSignInStatus(
+    [Description("Checks and returns the current Microsoft Entra ID and Power BI authentication status for the current MCP session.")]
+    public Task<MsSignInStatusToolResult> VerifyPowerBiAuthentication(
         RequestContext<CallToolRequestParams> request,
         CancellationToken cancellationToken)
     {
         try
         {
             var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
-            logger.LogInformation("MCP tool ms_sign_in_status called for session {McpSessionId}.", mcpSessionId);
+            logger.LogInformation("MCP tool verify_powerbi_authentication called for session {McpSessionId}.", mcpSessionId);
             return LogStatusResultAsync(
                 mcpSessionId,
                 entraDeviceFlowCoordinator.GetStatusAsync(mcpSessionId, cancellationToken));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "MCP tool ms_sign_in_status failed before status could be returned.");
+            logger.LogError(ex, "MCP tool verify_powerbi_authentication failed before status could be returned.");
             return Task.FromResult(new MsSignInStatusToolResult(
                 "failed",
                 string.Empty,
@@ -451,7 +451,7 @@ public sealed class WebApiMcpTools(
     {
         var result = await statusTask;
         logger.LogInformation(
-            "MCP tool ms_sign_in_status result for session {McpSessionId}: {ResultJson}",
+            "MCP tool verify_powerbi_authentication result for session {McpSessionId}: {ResultJson}",
             mcpSessionId,
             JsonSerializer.Serialize(result, LogSerializerOptions));
         return result;

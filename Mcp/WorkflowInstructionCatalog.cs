@@ -6,20 +6,20 @@ public sealed class WorkflowInstructionCatalog(IHostEnvironment hostEnvironment)
         hostEnvironment.ContentRootPath,
         "McpClientInstructions");
 
-    public WorkflowInstructionDocument GetDiscoverWorkflowInstruction()
+    public WorkflowInstructionDocument GetStartFinancialAnalyticsWorkflowInstruction()
     {
         return LoadInstruction(
-            fileName: "discover-workflow.md",
-            instructionName: "discover_workflow",
-            title: "Discover Workflow");
+            fileName: "start-financial-analytics-workflow.md",
+            instructionName: "start_financial_analytics_workflow",
+            title: "Start Financial Analytics Workflow");
     }
 
-    public WorkflowInstructionDocument GetFinancialAnalyticsModelKnowledgeInstruction()
+    public WorkflowInstructionDocument GetRequiredFinancialAnalyticsModelKnowledgeInstruction()
     {
         return LoadInstruction(
-            fileName: "financial-analytics-model-knowledge.md",
-            instructionName: "financial_analytics_model_knowledge",
-            title: "Financial Analytics Model Knowledge");
+            fileName: "get-required-financial-analytics-model-knowledge.md",
+            instructionName: "get_required_financial_analytics_model_knowledge",
+            title: "Get Required Financial Analytics Model Knowledge");
     }
 
     private WorkflowInstructionDocument LoadInstruction(
