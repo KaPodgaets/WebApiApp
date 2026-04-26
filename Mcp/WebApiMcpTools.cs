@@ -83,6 +83,48 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
+        Name = "powerbi_list_workspaces_and_models_rest",
+        Title = "Power BI List Workspaces And Models REST",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Lists accessible Power BI workspaces and their semantic models by calling the Power BI REST API with the current MCP session's signed-in Entra token.")]
+    public async Task<Dictionary<string, object?>> PowerBiListWorkspacesAndModelsRest(
+        RequestContext<CallToolRequestParams> request,
+        CancellationToken cancellationToken)
+    {
+        var mcpSessionId = ResolveMcpSessionId(request, httpContextAccessor);
+        logger.LogInformation(
+            "MCP tool powerbi_list_workspaces_and_models_rest called for session {McpSessionId}.",
+            mcpSessionId);
+
+        try
+        {
+            return await powerBiRestQueryCoordinator.ListWorkspacesAndModelsAsync(
+                mcpSessionId,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "MCP tool powerbi_list_workspaces_and_models_rest failed for session {McpSessionId}.",
+                mcpSessionId);
+
+            return new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["status"] = "failed",
+                ["workspaceCount"] = 0,
+                ["modelCount"] = 0,
+                ["workspaces"] = Array.Empty<object>(),
+                ["errorMessage"] = ex.Message
+            };
+        }
+    }
+
+    [McpServerTool(
         Name = "ms_sign_in",
         Title = "MS Sign In",
         Destructive = false,
