@@ -59,14 +59,14 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
-        Name = "start_financial_analytics_workflow",
-        Title = "Start Financial Analytics Workflow",
+        Name = "1_start_analytics_workflow_for_power_bi",
+        Title = "1 Start Analytics Workflow For Power BI",
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
         UseStructuredContent = true)]
-    [Description("Returns the default Financial Analytics workflow instruction for the MCP client, including sign-in, authentication verification, knowledge lookup, semantic model discovery, and DAX execution guidance.")]
+    [Description("Use this tool first for every Financial Analytics request. It returns the mandatory workflow that must be followed before checking authentication, fetching schema, generating DAX, or executing DAX.")]
     public WorkflowInstructionToolResult StartFinancialAnalyticsWorkflow()
     {
         var instruction = workflowInstructionCatalog.GetStartFinancialAnalyticsWorkflowInstruction();
@@ -77,7 +77,7 @@ public sealed class WebApiMcpTools(
             instruction.Markdown);
 
         logger.LogInformation(
-            "MCP tool start_financial_analytics_workflow result loaded from {FileName}.",
+            "MCP tool 1_start_analytics_workflow_for_power_bi result loaded from {FileName}.",
             instruction.FileName);
 
         return result;
