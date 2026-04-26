@@ -21,7 +21,7 @@ public sealed class McpController : ControllerBase
                 "ms_sign_in",
                 "verify_powerbi_authentication",
                 "powerbi_get_semantic_model_schema",
-                "get_required_financial_analytics_model_knowledge",
+                "get_required_semantic_model_knowledge",
                 "powerbi_list_workspaces_and_models_rest",
                 "powerbi_execute_dax_rest"
             }

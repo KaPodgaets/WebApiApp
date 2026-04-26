@@ -12,7 +12,7 @@ Use this naming convention for Financial Analytics MCP tools that guide an agent
 
 - `step_1_start_financial_analytics_workflow`
 - `step_2_verify_powerbi_authentication`
-- `step_3_get_required_financial_analytics_model_knowledge`
+- `step_3_get_required_semantic_model_knowledge`
 - `step_4_fetch_powerbi_semantic_model_schema`
 - `step_5_execute_powerbi_dax_query`
 

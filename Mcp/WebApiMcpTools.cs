@@ -22,6 +22,7 @@ public sealed class WebApiMcpTools(
     ILogger<WebApiMcpTools> logger)
 {
     private static readonly JsonSerializerOptions LogSerializerOptions = new(JsonSerializerDefaults.Web);
+    private static readonly string[] AvailableModelChoices = ["Financial Analytics", "Another model"];
 
     [Description("Adds two single-digit integers and returns the result.")]
     public MathToolResult SumDigits(
@@ -83,25 +84,29 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
-        Name = "get_required_financial_analytics_model_knowledge",
-        Title = "Get Required Financial Analytics Model Knowledge",
+        Name = "get_required_semantic_model_knowledge",
+        Title = "Get Required Semantic Model Knowledge",
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
         ReadOnly = true,
         UseStructuredContent = true)]
-    [Description("Returns Financial Analytics model knowledge for the MCP client, including allowed measures, optional dimensions, and guidance on when to use each measure. This model covers BvA, Revenue Analysis, Expenses, Vendor Bills, Customer Payments, Balance Sheet, and Profit and Loss.")]
-    public WorkflowInstructionToolResult GetRequiredFinancialAnalyticsModelKnowledge()
+    [Description("Returns semantic model knowledge for the requested model. Supported model choices are 'Financial Analytics' and 'Another model'.")]
+    public SemanticModelKnowledgeToolResult GetRequiredSemanticModelKnowledge(
+        [Description("The semantic model to load. Supported values: 'Financial Analytics' or 'Another model'.")] string modelName)
     {
-        var instruction = workflowInstructionCatalog.GetRequiredFinancialAnalyticsModelKnowledgeInstruction();
-        var result = new WorkflowInstructionToolResult(
+        var instruction = workflowInstructionCatalog.GetRequiredSemanticModelKnowledgeInstruction(modelName);
+        var result = new SemanticModelKnowledgeToolResult(
             instruction.Name,
             instruction.Title,
+            modelName,
+            AvailableModelChoices,
             instruction.FileName,
             instruction.Markdown);
 
         logger.LogInformation(
-            "MCP tool get_required_financial_analytics_model_knowledge result loaded from {FileName}.",
+            "MCP tool get_required_semantic_model_knowledge returned model {ModelName} from {FileName}.",
+            modelName,
             instruction.FileName);
 
         return result;
@@ -467,6 +472,14 @@ public sealed record ClientAppIdToolResult(string ClientAppId);
 public sealed record WorkflowInstructionToolResult(
     string Name,
     string Title,
+    string FileName,
+    string Markdown);
+
+public sealed record SemanticModelKnowledgeToolResult(
+    string Name,
+    string Title,
+    string SelectedModel,
+    string[] AvailableModels,
     string FileName,
     string Markdown);
 

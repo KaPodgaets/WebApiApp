@@ -74,7 +74,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, starting the Financial Analytics workflow with start_financial_analytics_workflow, verifying Power BI authentication with verify_powerbi_authentication, reading Financial Analytics model measure guidance with get_required_financial_analytics_model_knowledge for BvA, Revenue Analysis, Expenses, Vendor Bills, Customer Payments, Balance Sheet, and Profit and Loss, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, starting the Financial Analytics workflow with start_financial_analytics_workflow, verifying Power BI authentication with verify_powerbi_authentication, reading semantic model guidance with get_required_semantic_model_knowledge by sending either Financial Analytics or Another model, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -112,7 +112,7 @@ app.MapGet("/", () => Results.Ok(new
             "ms_sign_in",
             "verify_powerbi_authentication",
             "powerbi_get_semantic_model_schema",
-            "get_required_financial_analytics_model_knowledge",
+            "get_required_semantic_model_knowledge",
             "powerbi_list_workspaces_and_models_rest",
             "powerbi_execute_dax_rest"
         }
