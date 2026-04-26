@@ -74,7 +74,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, starting the Financial Analytics workflow with start_financial_analytics_workflow, verifying Power BI authentication with verify_powerbi_authentication, reading semantic model guidance with get_required_semantic_model_knowledge by sending either Financial Analytics or Another model, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, starting the Power BI analytics workflow with 1_start_analytics_workflow_for_power_bi, verifying Power BI authentication with verify_powerbi_authentication, reading semantic model guidance with get_required_semantic_model_knowledge by sending either Financial Analytics or Another model, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -107,7 +107,7 @@ app.MapGet("/", () => Results.Ok(new
         transport = "streamable-http",
         tools = new[]
         {
-            "start_financial_analytics_workflow",
+            "1_start_analytics_workflow_for_power_bi",
             "mcp_echo_status",
             "ms_sign_in",
             "verify_powerbi_authentication",

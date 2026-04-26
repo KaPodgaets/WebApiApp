@@ -10,8 +10,8 @@ public sealed class WorkflowInstructionCatalog(IHostEnvironment hostEnvironment)
     {
         return LoadInstruction(
             fileName: "start-analytics-workflow.md",
-            instructionName: "start_financial_analytics_workflow",
-            title: "Start Financial Analytics Workflow");
+            instructionName: "1_start_analytics_workflow_for_power_bi",
+            title: "1 Start Analytics Workflow For Power BI");
     }
 
     public WorkflowInstructionDocument GetRequiredSemanticModelKnowledgeInstruction(string modelName)
