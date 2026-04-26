@@ -14,6 +14,14 @@ public sealed class WorkflowInstructionCatalog(IHostEnvironment hostEnvironment)
             title: "Discover Workflow");
     }
 
+    public WorkflowInstructionDocument GetFinancialAnalyticsModelKnowledgeInstruction()
+    {
+        return LoadInstruction(
+            fileName: "financial-analytics-model-knowledge.md",
+            instructionName: "financial_analytics_model_knowledge",
+            title: "Financial Analytics Model Knowledge");
+    }
+
     private WorkflowInstructionDocument LoadInstruction(
         string fileName,
         string instructionName,

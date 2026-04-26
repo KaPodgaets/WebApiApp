@@ -74,7 +74,7 @@ builder.Services
             Version = "1.0.0"
         };
         options.ServerInstructions =
-            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, discovering the default analytical workflow with discover_workflow, Microsoft Entra ID device-flow sign in tied to the current MCP session, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
+            "Use the exposed tools for single-digit addition, single-digit multiplication, reading the current UTC date and time, discovering the default analytical workflow with discover_workflow, reading Financial Analytics model measure guidance with financial_analytics_model_knowledge for BvA, Revenue Analysis, Expenses, Vendor Bills, Customer Payments, Balance Sheet, and Profit and Loss, Microsoft Entra ID device-flow sign in tied to the current MCP session, proxying Power BI remote MCP operations, and executing DAX queries directly against Power BI REST with the signed-in user's access token.";
     })
     .WithTools<WebApiMcpTools>()
     .WithHttpTransport()
@@ -112,6 +112,7 @@ app.MapGet("/", () => Results.Ok(new
             "ms_sign_in",
             "ms_sign_in_status",
             "powerbi_get_semantic_model_schema",
+            "financial_analytics_model_knowledge",
             "powerbi_list_workspaces_and_models_rest",
             "powerbi_execute_dax_rest"
         }

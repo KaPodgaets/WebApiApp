@@ -83,6 +83,31 @@ public sealed class WebApiMcpTools(
     }
 
     [McpServerTool(
+        Name = "financial_analytics_model_knowledge",
+        Title = "Financial Analytics Model Knowledge",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        UseStructuredContent = true)]
+    [Description("Returns Financial Analytics model knowledge for the MCP client, including allowed measures, optional dimensions, and guidance on when to use each measure. This model covers BvA, Revenue Analysis, Expenses, Vendor Bills, Customer Payments, Balance Sheet, and Profit and Loss.")]
+    public WorkflowInstructionToolResult FinancialAnalyticsModelKnowledge()
+    {
+        var instruction = workflowInstructionCatalog.GetFinancialAnalyticsModelKnowledgeInstruction();
+        var result = new WorkflowInstructionToolResult(
+            instruction.Name,
+            instruction.Title,
+            instruction.FileName,
+            instruction.Markdown);
+
+        logger.LogInformation(
+            "MCP tool financial_analytics_model_knowledge result loaded from {FileName}.",
+            instruction.FileName);
+
+        return result;
+    }
+
+    [McpServerTool(
         Name = "powerbi_list_workspaces_and_models_rest",
         Title = "Power BI List Workspaces And Models REST",
         Destructive = false,
